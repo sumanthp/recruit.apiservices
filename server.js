@@ -29,6 +29,6 @@ mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }
         console.log("Failed to connect to Mongodb");
     }
 });
-var server = app.listen(5000, function (req,res) {
+var server = app.listen((process.env.PORT || 5000), function (req,res) {
     console.log("Listening on port",server.address().port);
 });
