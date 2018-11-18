@@ -42,7 +42,7 @@ function validatePassword(req, user, res){
         if(result){
             console.log(req.body.email, user.password);
             res.status(200).send({
-                message: "Welcome back "+req.body.email,
+                message: "Welcome back "+user.name,
                 token : createToken(user)
             });
         }
