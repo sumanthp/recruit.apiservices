@@ -21,7 +21,7 @@ app.use(function(req,res,next){
 app.route('/api/login').post(auth.login);
 app.route('/api/register').post(auth.register);
 
-mongoose.connect("mongodb://localhost:27017/Account", function(err,db){
+mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
     if(!err){
         console.log("Successfully conencted to mongodb");
         database = db;
