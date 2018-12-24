@@ -21,7 +21,8 @@ app.route('/api/google/login').post(auth.google);
 app.route('/api/linkedin/login').post(auth.linkedin);
 app.route('/api/getUserDetails').post(auth.getUserDetails);
 // mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account
-mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
+//mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
+mongoose.connect("mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account",  { useNewUrlParser: true }, function(err,db){
     if(!err){
         console.log("Successfully conencted to mongodb");
         database = db;
