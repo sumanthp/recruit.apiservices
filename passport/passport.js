@@ -53,9 +53,10 @@ module.exports = function(app, passport) {
     passport.deserializeUser(function(obj,cb){
         cb(null,obj);
     });
-    app.route('/auth/facebook/callback', passport.authenticate('facebook', {failureRedirect:'/login'}), function(req, res){
-        res.redirect('/facebook/' + token);
-    });
-    app.route('/auth/facebook', passport.authenticate('facebook, {scope:email}'));
-    return passport;
+    // // app.route('/auth/facebook/callback', passport.authenticate('facebook', {failureRedirect:'/login'}), function(req, res){
+    //     // res.redirect('/facebook/' + token);
+    //     res.send(token);
+    // });
+    // app.route('/auth/facebook', passport.authenticate('facebook, {scope:email}'));
+    // return passport;
 }
