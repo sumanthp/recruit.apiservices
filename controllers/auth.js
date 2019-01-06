@@ -191,7 +191,7 @@ module.exports= {
 
     validateEmailLink: function(req, res){
         console.log(req.protocol + "://" +req.get('host'));
-        if((req.protocol + "://" + req.get('host')) == ("http://localhost:5000")){
+        if((req.protocol + "://" + req.get('host')) == ("http://recruit-apiservices.herokuapp.com")){
             console.log("Domain is matched. Request is from authentic email");
                 var user = new User(
                     {
