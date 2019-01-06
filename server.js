@@ -84,8 +84,8 @@ app.route('/auth/facebook/callback', passport.authenticate('facebook', {failureR
 });
 app.route('/auth/facebook').post(passport.authenticate('facebook'));
 // mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account
-mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
-//mongoose.connect("mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account",  { useNewUrlParser: true }, function(err,db){
+//mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
+mongoose.connect("mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account",  { useNewUrlParser: true }, function(err,db){
     if(!err){
         console.log("Successfully conencted to mongodb");
         database = db;
