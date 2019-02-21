@@ -8,7 +8,7 @@ module.exports = mongoose.model('User', {
     Contact : {type: Number, requried:true},
     Age: Number,
     DOB: {type: Date, required: true},
-    location: {type: String, required: true},
+    location: {type: String},
     Active: {type: Boolean, required: true},
     EmailHash: {type: String, required: true, unique: true},
     created_at: Date,

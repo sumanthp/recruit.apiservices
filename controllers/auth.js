@@ -116,7 +116,7 @@ async function  getAccountDetails(code){
 }
 
 function validateRegisterParams(data){
-    if(data.email!=null && data.firstName!=null && data.lastName!=null && data.password!=null && data.contact!=null && data.dob!=null && data.location!=null){
+    if(data.email!=null && data.firstname!=null && data.lastname!=null && data.password!=null && data.phone!=null && data.dob!=null){
         return true;
     }else{
         return false;
@@ -370,13 +370,13 @@ function hashPassword(req, res){
             host = req.get('host');
             sendEmailVerificationLink(host, req.body.email, rand);
             var user = new User({
-                FirstName : req.body.firstName,
-                LastName : req.body.lastName,
+                FirstName : req.body.firstname,
+                LastName : req.body.lastname,
                 Email : req.body.email,
                 Password : req.body.password,
-                Contact : req.body.contact,
+                Contact : req.body.phone,
                 DOB : new Date(req.body.dob),
-                location : req.body.location,
+                // location : req.body.location,
                 Active : false,
                 EmailHash : rand,
                 created_at : new Date(),
