@@ -41,7 +41,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.route('/api/login').post(auth.login);
 app.route('/api/register').post(auth.register);
-app.route('api/register/recruiter').post(auth.register_recruiter)
+app.route('/api/register/recruiter').post(auth.register_recruiter)
 app.route('/api/facebook/login').post(auth.facebook);
 app.route('/api/google/login').post(auth.google);
 app.route('/api/linkedin/login').post(auth.linkedin);
@@ -83,8 +83,7 @@ app.route('/auth/facebook/callback', passport.authenticate('facebook', {failureR
     res.send(token);
 });
 app.route('/auth/facebook').post(passport.authenticate('facebook'));
-// mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account
-//mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
+// mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
 mongoose.connect("mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account",  { useNewUrlParser: true }, function(err,db){
     if(!err){
         console.log("Successfully conencted to mongodb");

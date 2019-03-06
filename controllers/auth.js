@@ -123,6 +123,14 @@ function validateRegisterParams(data){
     }
 }
 
+function validateRegisterRecruiterParams(data){
+    if(data.email!=null && data.companyname!=null && data.gst!=null && data.password!=null && data.phone!=null && data.address!=null){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 module.exports= {
     register: function (req, res) {
         console.log(req.body);
@@ -144,15 +152,22 @@ module.exports= {
 
     register_recruiter: function (req, res) {
         console.log(req.body);
-        if(validateRegisterParams(req.body)){
-            Recruiter.findOne({Email: req.body.email}, function(err, existingUser){
-                if(existingUser)
-                {
-                    console.log("Email already exists in the database");
-                    return res.status(409).send({message:"Email is already registered"});
-                }
-                else{
-                    hashPassword(req, res);
+        if(validateRegisterRecruiterParams(req.body)){
+            Recruiter.findOne({Gst: req.body.gst}, function(err, existingCompany){
+                if(!existingCompany){
+                    Recruiter.findOne({Email: req.body.email}, function(err, existingUser){
+                        if(!existingUser)
+                        {
+                            console.log("Email already exists in the database");
+                            return res.status(409).send({message:"Email is already registered"});
+                        }
+                        else{
+                            hashPasswordRecruiter(req, res);
+                        }
+                    });
+                }else{
+                    console.log("GST Number exists in the database");
+                    return res.status(409).send({message:"GST Number provided is already registered"});
                 }
             });
         }else{
@@ -182,10 +197,17 @@ module.exports= {
         console.log(req.body.email);
         User.findOne({Email: req.body.email}, function(err, user){
            if(!user){
-                console.log("Invalid Email or password");
-                return res.status(401).send({message: "Email or Password Invalid"});
+               Recruiter.findOne({Email: req.body.email}, function(err, recruiter){
+                if(!recruiter){
+                    console.log("Invalid Email or password");
+                    return res.status(401).send({message: "Email or Password Invalid"});
+                }else{
+                    validatePassword(req, recruiter, res);
+                   }
+               });
+           }else{
+            validatePassword(req, user, res);
            }
-           validatePassword(req, user, res);
         });
     },
 
@@ -342,6 +364,7 @@ function createToken(user){
     return jwt.encode(payload, 'recruit');
 }
 function validatePassword(req, user, res){
+    console.log(user);
     bcrypt.compare(req.body.password, user.Password, function(err, result){
         if(result){
             console.log(req.body.email, user.Password);
@@ -356,6 +379,43 @@ function validatePassword(req, user, res){
         }
     })
 }
+
+function hashPasswordRecruiter(req, res){
+    bcrypt.hash(req.body.password, 10, function(err,hash){
+        if(err){
+            console.log("Failed to hash the password. Try again");
+            req.status(500).send("Failed to encrypt data. Try again");
+        }
+        else{
+            req.body.password = hash;
+            rand = Math.floor((Math.random() * 100) + 54);
+            host = req.get('host');
+            sendEmailVerificationLink(host, req.body.email, rand);
+            var recruiter = new Recruiter({
+                CompanyName : req.body.companyname,
+                Email : req.body.email,
+                Password : req.body.password,
+                Contact : req.body.phone,
+                Address : req.body.address,
+                Gst : req.body.gst,
+                Active : false,
+                EmailHash : rand,
+                created_at : new Date(),
+                updated_at : new Date()
+            });
+            recruiter.save(function (err, result) {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send({
+                        message: err.message
+                    });
+                }
+                res.status(200).send({message: "User Registered Successfully. Please verify your Email. Email send to your mail id", token: createToken(recruiter)});
+            });
+        }
+    })
+}
+
 function hashPassword(req, res){
     bcrypt.hash(req.body.password, 10, function(err,hash){
         if(err){
@@ -365,8 +425,6 @@ function hashPassword(req, res){
         else{
             req.body.password = hash;
             rand = Math.floor((Math.random() * 100) + 54);
-            //emailhash = encryptData(rand, res);
-            //console.log(emailhash);
             host = req.get('host');
             sendEmailVerificationLink(host, req.body.email, rand);
             var user = new User({
@@ -376,7 +434,6 @@ function hashPassword(req, res){
                 Password : req.body.password,
                 Contact : req.body.phone,
                 DOB : new Date(req.body.dob),
-                // location : req.body.location,
                 Active : false,
                 EmailHash : rand,
                 created_at : new Date(),
