@@ -9,6 +9,9 @@ var session = require('express-session');
 var jwt = require('jsonwebtoken');
 FacebookStrategy = require('passport-facebook').Strategy;
 var firebase = require('firebase');
+const {port, connectionstring} = require('./config');
+console.log(`Port No : ${port}`);
+console.log(`Mongodb Connection string : ${connectionstring}`);
 
 var config = {
     apiKey: "AIzaSyD-ntzQCkESWnRBQRXIRx5y3xO-k2Yqouw",
@@ -83,8 +86,7 @@ app.route('/auth/facebook/callback', passport.authenticate('facebook', {failureR
     res.send(token);
 });
 app.route('/auth/facebook').post(passport.authenticate('facebook'));
-// mongoose.connect("mongodb://localhost:27017/Account",  { useNewUrlParser: true }, function(err,db){
-mongoose.connect("mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account",  { useNewUrlParser: true }, function(err,db){
+mongoose.connect(connectionstring,  { useNewUrlParser: true }, function(err,db){
     if(!err){
         console.log("Successfully conencted to mongodb");
         database = db;
@@ -92,6 +94,6 @@ mongoose.connect("mongodb://sumanth:Polisetty5@ds211694.mlab.com:11694/account",
         console.log("Failed to connect to Mongodb");
     }
 });
-var server = app.listen((process.env.PORT || 5000), function (req,res) {
+var server = app.listen((process.env.PORT || port), function (req, res) {
     console.log("Listening on port",server.address().port);
 });
