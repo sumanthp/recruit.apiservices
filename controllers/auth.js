@@ -1,14 +1,13 @@
 var User = require('../models/user');
-var Recruiter = require('../models/recruiter')
+var Recruiter = require('../models/recruiter');
+var Profile  = require('../models/profile');
 var jwt = require('jwt-simple');
 var moment = require('moment');
-var passport = require('passport');
-var passport_facebook = require('passport-facebook').Strategy;
-var passport_linkedin = require('passport-linkedin');
-FacebookStrategy = require('passport-facebook').Strategy;
 const {google} = require('googleapis');
 const bcrypt = require('bcrypt');
-
+var multer = require('multer');
+var statusCodes = require('../StatusCodes');
+var fs = require('fs');
 const googleConfig = {
     clientID: '539355564298-0lfascp1af43b79cks4tt6mdr2ers4h6.apps.googleusercontent.com',
     clientSecret: 'wop5c2pCtr4M8Q3MJSwvRj_9',
@@ -180,17 +179,49 @@ module.exports= {
         var token = req.body.token || req.body.query || req.headers['x-access-token'];
         if(!token){
             res.statusMessage = 'unauthorized: Token not found.';
-            res.sendStatus('401').end();
+            res.sendStatus(statusCodes.Denied).end();
         }else{
             try{
                  const decodeToken = jwt.decode(token, 'recruit');
-                 res.status(200).send({succes:true, user:decodeToken});
+                 res.status(statusCodes.success).send({succes:true, user:decodeToken});
             }catch(e){
                 res.statusMessage = "unauthorized: invalid token.";
-                res.sendStatus('401');
+                res.sendStatus(statusCodes.Denied);
                 return;
             }
         }
+    },
+
+    getProfile: function(req, res){
+        console.log("Get Profile Details of User");
+         User.find({Email:req.body.email}, 'FirstName LastName Contact DOB Active', function(err, user){
+            if(err){   
+                res.status(statusCodes.Denied).send({success:false, message: "User does not exist. Failed to get user details"});
+            }
+            else{
+                getProfileIamge(user);
+                res.status(statusCodes.success).send({success:true , message: "User Data : "+user});
+            }
+        });
+    },
+
+    profileImageUpload: function(req, res){
+        var profile = new Profile();
+        var image = fs.readFileSync(req.files.userImage.path);
+        var encode_image = image.toString('base64');
+        profile.image.data = new Buffer(encode_image, 'base64');WWW
+        profile.image.contentType = req.file.mimetype; 
+
+        Profile.findOneAndUpdate({Email: req.body.email, image: profile.image}, function(err, profile){
+            if(err){
+                console.log('Profile Image Upload failed: '+err);
+                res.status(statusCodes.Denied).status('message: Failed to update profile Iamge, Try Again Later.');
+            }
+            else{
+                console.log('profile Image update success '+profile);
+                res.status(statusCodes.success),status('message: Profile Image Updated successfully');
+            }
+        });
     },
 
     login: function (req, res) {
@@ -240,76 +271,76 @@ module.exports= {
             }
     },
 
-    facebookLogin : function(req,res){
-        passport.use(new FacebookStrategy({
-            clientID:"912201792307025",
-            clientSecret:"",
-            callbackURL:"",
-            profileFields: ['id', 'displayName', 'email']
-        },
-        function(accessToken, refreshToken, profile, cb){
-            User.findOne({email: profile._json.email}).select('name password email').exec(function(err, user){
-                if(err){
-                    cb(err);
-                }
-                if(user && user!=null){
-                    cb(null,user);
-                }else{
-                    cb(err);
-                }
-            });
-            console.log(profile);
-            return cb(null, profile);
-        }));
-        passport.serializeUser(function(user,cb){
-            token = createToken(user);
-            cb(null,user.id);
-        });
-        passport.deserializeUser(function(obj,cb){
-            cb(null,obj);
-        });
-        passport.authenticate('facebook');
-    },
+    // facebookLogin : function(req,res){
+    //     passport.use(new FacebookStrategy({
+    //         clientID:"912201792307025",
+    //         clientSecret:"",
+    //         callbackURL:"",
+    //         profileFields: ['id', 'displayName', 'email']
+    //     },
+    //     function(accessToken, refreshToken, profile, cb){
+    //         User.findOne({email: profile._json.email}).select('name password email').exec(function(err, user){
+    //             if(err){
+    //                 cb(err);
+    //             }
+    //             if(user && user!=null){
+    //                 cb(null,user);
+    //             }else{
+    //                 cb(err);
+    //             }
+    //         });
+    //         console.log(profile);
+    //         return cb(null, profile);
+    //     }));
+    //     passport.serializeUser(function(user,cb){
+    //         token = createToken(user);
+    //         cb(null,user.id);
+    //     });
+    //     passport.deserializeUser(function(obj,cb){
+    //         cb(null,obj);
+    //     });
+    //     passport.authenticate('facebook');
+    // },
 
-    facebook: function(req, res){
-        passport.use(new passport_facebook({
-            clientID:"",
-            clientSecret:"",
-            callbackURL:""
-        },
-        function(accessToken, refreshToken, profile, cb){
-            User.findOrCreate({facebookId: profile.id}, function(err,user){
-                return cb(err,user);
-            })
-        }));
-        passport.serializeUser(function(user,cb){
-            cb(null,user);
-        });
-        passport.deserializeUser(function(obj,cb){
-            cb(null,obj);
-        });
-    },
+    // facebook: function(req, res){
+    //     passport.use(new passport_facebook({
+    //         clientID:"",
+    //         clientSecret:"",
+    //         callbackURL:""
+    //     },
+    //     function(accessToken, refreshToken, profile, cb){
+    //         User.findOrCreate({facebookId: profile.id}, function(err,user){
+    //             return cb(err,user);
+    //         })
+    //     }));
+    //     passport.serializeUser(function(user,cb){
+    //         cb(null,user);
+    //     });
+    //     passport.deserializeUser(function(obj,cb){
+    //         cb(null,obj);
+    //     });
+    // },
 
-    google: function(req, res){
-        // passport.use(new passport_google({
-        //     clientID: "827184650329-aurntqn7t2djnbv8e2m05jhtqb4vfeed.apps.googleusercontent.com",
-        //     clientSecret:"nFmjopJDMDmqkLsF60qiWT7G",
-        //     callbackURL:""
-        // },
-        // function(accessToken, refreshToken, profile, cb){
-        //     User.findOrCreate({facebookId: profile.id}, function(err,user){
-        //         return cb(err,user);
-        //     })
-        // }));
-        // passport.serializeUser(function(user,cb){
-        //     cb(null,user);
-        // });
-        // passport.deserializeUser(function(obj,cb){
-        //     cb(null,obj);
-        // });
-        var url = createUrl();
-        console.log(url);
-    },
+    // google: function(req, res){
+    //     // passport.use(new passport_google({
+    //     //     clientID: "827184650329-aurntqn7t2djnbv8e2m05jhtqb4vfeed.apps.googleusercontent.com",
+    //     //     clientSecret:"nFmjopJDMDmqkLsF60qiWT7G",
+    //     //     callbackURL:""
+    //     // },
+    //     // function(accessToken, refreshToken, profile, cb){
+    //     //     User.findOrCreate({facebookId: profile.id}, function(err,user){
+    //     //         return cb(err,user);
+    //     //     })
+    //     // }));
+    //     // passport.serializeUser(function(user,cb){
+    //     //     cb(null,user);
+    //     // });
+    //     // passport.deserializeUser(function(obj,cb){
+    //     //     cb(null,obj);
+    //     // });
+    //     var url = createUrl();
+    //     console.log(url);
+    // },
 
     googleLoginRedirect : function(req, res){
         var code= req.query.code;
@@ -333,24 +364,24 @@ module.exports= {
         }
     },
 
-    linkedin: function(req, res){
-        passport.use(new passport_linkedin({
-            clientID:"81u0oh0mys638l",
-            clientSecret:"wDjHTNB4rzMtzQJv",
-            callbackURL:""
-        },
-        function(accessToken, refreshToken, profile, cb){
-            User.findOrCreate({facebookId: profile.id}, function(err,user){
-                return cb(err,user);
-            })
-        }));
-        passport.serializeUser(function(user,cb){
-            cb(null,user);
-        });
-        passport.deserializeUser(function(obj,cb){
-            cb(null,obj);
-        });
-    }
+    // linkedin: function(req, res){
+    //     passport.use(new passport_linkedin({
+    //         clientID:"81u0oh0mys638l",
+    //         clientSecret:"wDjHTNB4rzMtzQJv",
+    //         callbackURL:""
+    //     },
+    //     function(accessToken, refreshToken, profile, cb){
+    //         User.findOrCreate({facebookId: profile.id}, function(err,user){
+    //             return cb(err,user);
+    //         })
+    //     }));
+    //     passport.serializeUser(function(user,cb){
+    //         cb(null,user);
+    //     });
+    //     passport.deserializeUser(function(obj,cb){
+    //         cb(null,obj);
+    //     });
+    // }
 };
 
 function createToken(user){
@@ -414,6 +445,15 @@ function hashPasswordRecruiter(req, res){
             });
         }
     })
+}
+function getProfileIamge(user){
+    profile.findOne({_id:user._id},'Image',function(err, result){
+        if(err){
+            res.status(401).send({success:false, message:'profile Image is not available for the user'});
+        }else{
+            res.status(200).send({succes:true, message:result});
+        }
+    });
 }
 
 function hashPassword(req, res){
