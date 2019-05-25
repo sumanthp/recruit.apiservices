@@ -45,7 +45,7 @@ firebase.initializeApp(config);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(function(req,res,next){
-   res.header("Access-Control-Allow-Origin", "https://recruit-5fa61.firebaseapp.com");
+   res.header("Access-Control-Allow-Origin", "*");
    res.header("Access-Control-Allow-Headers", "x-auth, Content-Type, Authorization, x-access-token");
    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
    res.setHeader('Access-Control-Allow-Credentials', true);
