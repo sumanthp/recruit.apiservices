@@ -179,14 +179,14 @@ module.exports= {
         var token = req.body.token || req.body.query || req.headers['x-access-token'];
         if(!token){
             res.statusMessage = 'unauthorized: Token not found.';
-            res.sendStatus(statusCodes.Denied).end();
+            res.sendStatus(400).end();
         }else{
             try{
                  const decodeToken = jwt.decode(token, 'recruit');
-                 res.status(statusCodes.success).send({succes:true, user:decodeToken});
+                 res.status(200).send({succes:true, user:decodeToken});
             }catch(e){
                 res.statusMessage = "unauthorized: invalid token.";
-                res.sendStatus(statusCodes.Denied);
+                res.sendStatus(401);
                 return;
             }
         }
@@ -194,15 +194,28 @@ module.exports= {
 
     getProfile: function(req, res){
         console.log("Get Profile Details of User");
-         User.find({Email:req.body.email}, 'FirstName LastName Contact DOB Active', function(err, user){
-            if(err){   
-                res.status(statusCodes.Denied).send({success:false, message: "User does not exist. Failed to get user details"});
+        console.log(req.body.token);
+        const decodedToken = jwt.decode(req.body.token, 'recruit');
+        console.log(decodedToken);
+        if(decodedToken!=null && decodedToken!=''){
+            if(validateGetProfileRequest(decodedToken.email)){
+                User.find({Email:decodedToken.email}, 'FirstName LastName Email Contact DOB Active', function(err, user){
+                    if(err){   
+                        res.status(401).send({success:false, message: "User does not exist. Failed to get user details"});
+                    }
+                    else{
+                        //getProfileIamge(user);
+                        console.log(user);
+                        res.status(200).send({success:true , message: user});
+                    }
+                });
+            }else{
+                res.status(401).send({success:false, message: "Failed to get User Details. Invalid Input Parameter"});
             }
-            else{
-                getProfileIamge(user);
-                res.status(statusCodes.success).send({success:true , message: "User Data : "+user});
-            }
-        });
+        }else{
+            res.status(401).send({success:false, message: "Failed to get User Details. Invalid Input Parameter"});
+        }
+
     },
 
     profileImageUpload: function(req, res){
@@ -215,11 +228,11 @@ module.exports= {
         Profile.findOneAndUpdate({Email: req.body.email, image: profile.image}, function(err, profile){
             if(err){
                 console.log('Profile Image Upload failed: '+err);
-                res.status(statusCodes.Denied).status('message: Failed to update profile Iamge, Try Again Later.');
+                res.status(401).status('message: Failed to update profile Iamge, Try Again Later.');
             }
             else{
                 console.log('profile Image update success '+profile);
-                res.status(statusCodes.success),status('message: Profile Image Updated successfully');
+                res.status(200),status('message: Profile Image Updated successfully');
             }
         });
     },
@@ -270,78 +283,6 @@ module.exports= {
                 res.end("<h1>Bad Request. Try again</h1>");
             }
     },
-
-    // facebookLogin : function(req,res){
-    //     passport.use(new FacebookStrategy({
-    //         clientID:"912201792307025",
-    //         clientSecret:"",
-    //         callbackURL:"",
-    //         profileFields: ['id', 'displayName', 'email']
-    //     },
-    //     function(accessToken, refreshToken, profile, cb){
-    //         User.findOne({email: profile._json.email}).select('name password email').exec(function(err, user){
-    //             if(err){
-    //                 cb(err);
-    //             }
-    //             if(user && user!=null){
-    //                 cb(null,user);
-    //             }else{
-    //                 cb(err);
-    //             }
-    //         });
-    //         console.log(profile);
-    //         return cb(null, profile);
-    //     }));
-    //     passport.serializeUser(function(user,cb){
-    //         token = createToken(user);
-    //         cb(null,user.id);
-    //     });
-    //     passport.deserializeUser(function(obj,cb){
-    //         cb(null,obj);
-    //     });
-    //     passport.authenticate('facebook');
-    // },
-
-    // facebook: function(req, res){
-    //     passport.use(new passport_facebook({
-    //         clientID:"",
-    //         clientSecret:"",
-    //         callbackURL:""
-    //     },
-    //     function(accessToken, refreshToken, profile, cb){
-    //         User.findOrCreate({facebookId: profile.id}, function(err,user){
-    //             return cb(err,user);
-    //         })
-    //     }));
-    //     passport.serializeUser(function(user,cb){
-    //         cb(null,user);
-    //     });
-    //     passport.deserializeUser(function(obj,cb){
-    //         cb(null,obj);
-    //     });
-    // },
-
-    // google: function(req, res){
-    //     // passport.use(new passport_google({
-    //     //     clientID: "827184650329-aurntqn7t2djnbv8e2m05jhtqb4vfeed.apps.googleusercontent.com",
-    //     //     clientSecret:"nFmjopJDMDmqkLsF60qiWT7G",
-    //     //     callbackURL:""
-    //     // },
-    //     // function(accessToken, refreshToken, profile, cb){
-    //     //     User.findOrCreate({facebookId: profile.id}, function(err,user){
-    //     //         return cb(err,user);
-    //     //     })
-    //     // }));
-    //     // passport.serializeUser(function(user,cb){
-    //     //     cb(null,user);
-    //     // });
-    //     // passport.deserializeUser(function(obj,cb){
-    //     //     cb(null,obj);
-    //     // });
-    //     var url = createUrl();
-    //     console.log(url);
-    // },
-
     googleLoginRedirect : function(req, res){
         var code= req.query.code;
         console.log(code);
@@ -363,35 +304,24 @@ module.exports= {
             res.status(401).send({success:false,message:'Failed to getAccountDetails'});
         }
     },
-
-    // linkedin: function(req, res){
-    //     passport.use(new passport_linkedin({
-    //         clientID:"81u0oh0mys638l",
-    //         clientSecret:"wDjHTNB4rzMtzQJv",
-    //         callbackURL:""
-    //     },
-    //     function(accessToken, refreshToken, profile, cb){
-    //         User.findOrCreate({facebookId: profile.id}, function(err,user){
-    //             return cb(err,user);
-    //         })
-    //     }));
-    //     passport.serializeUser(function(user,cb){
-    //         cb(null,user);
-    //     });
-    //     passport.deserializeUser(function(obj,cb){
-    //         cb(null,obj);
-    //     });
-    // }
 };
+
+function validateGetProfileRequest(email){
+    if(email!=null && email!=''){
+        return true;
+    }
+    return false;
+}
 
 function createToken(user){
     var payload = {
         sub : user._id,
-        name : user.name,
-        email : user.email,
+        name : user.FirstName,
+        email : user.Email,
         iat: moment().unix(),
         exp: moment().add(24, 'hours').unix()
     };
+    console.log(payload);
     return jwt.encode(payload, 'recruit');
 }
 function validatePassword(req, user, res){
