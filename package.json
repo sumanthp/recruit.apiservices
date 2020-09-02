@@ -27,7 +27,7 @@
     "express-session": "^1.15.6",
     "firebase": "^5.7.2",
     "google-auth-library": "^2.0.2",
-    "googleapis": "^36.0.0",
+    "googleapis": "^39.1.0",
     "gridfs-stream": "^1.1.1",
     "jsonwebtoken": "^8.4.0",
     "jwt-simple": "^0.5.5",
